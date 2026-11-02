@@ -29,10 +29,7 @@ import dev.galacticraft.machinelib.impl.network.c2s.AccessLevelPayload;
 import dev.galacticraft.machinelib.impl.network.c2s.RedstoneModePayload;
 import dev.galacticraft.machinelib.impl.network.c2s.SideConfigurationClickPayload;
 import dev.galacticraft.machinelib.impl.network.c2s.TankInteractionPayload;
-import dev.galacticraft.machinelib.impl.network.s2c.BaseMachineUpdatePayload;
-import dev.galacticraft.machinelib.impl.network.s2c.MachineStatusUpdatePayload;
-import dev.galacticraft.machinelib.impl.network.s2c.MenuSyncPayload;
-import dev.galacticraft.machinelib.impl.network.s2c.SideConfigurationUpdatePayload;
+import dev.galacticraft.machinelib.impl.network.s2c.*;
 import net.minecraft.server.level.ServerPlayer;
 
 /**
@@ -52,6 +49,7 @@ public final class MachineLibPackets {
         // side type here on the dedicated server to avoid a double registration.
         if (Platform.getEnvironment() == Env.SERVER) {
             NetworkManager.registerS2CPayloadType(BaseMachineUpdatePayload.TYPE, BaseMachineUpdatePayload.CODEC);
+            NetworkManager.registerS2CPayloadType(PoweredUpdatePayload.TYPE, PoweredUpdatePayload.CODEC);
             NetworkManager.registerS2CPayloadType(MachineStatusUpdatePayload.TYPE, MachineStatusUpdatePayload.CODEC);
             NetworkManager.registerS2CPayloadType(SideConfigurationUpdatePayload.TYPE, SideConfigurationUpdatePayload.CODEC);
             NetworkManager.registerS2CPayloadType(MenuSyncPayload.TYPE, MenuSyncPayload.CODEC);

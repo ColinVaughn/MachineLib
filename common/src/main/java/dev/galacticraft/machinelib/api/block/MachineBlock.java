@@ -206,6 +206,14 @@ public abstract class MachineBlock extends BaseBlock {
     }
 
     @Override
+    protected void onRemove(BlockState blockState, Level level, BlockPos blockPos, BlockState blockState2, boolean bl) {
+        if(!level.isClientSide && (!blockState.is(blockState2.getBlock()) && level.getBlockEntity(blockPos) instanceof MachineBlockEntity machine))
+            machine.onRemove();
+
+        super.onRemove(blockState, level, blockPos, blockState2, bl);
+    }
+
+    @Override
     public @NotNull RenderShape getRenderShape(BlockState state) {
         return RenderShape.MODEL;
     }

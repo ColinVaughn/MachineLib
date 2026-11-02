@@ -256,4 +256,6 @@ public abstract class MachineBlockEntity extends ConfiguredBlockEntity {
             this.level.sendBlockUpdated(this.worldPosition, Blocks.AIR.defaultBlockState(), this.getBlockState(), Block.UPDATE_IMMEDIATE);
         }
     }
+
+    public void onRemove(){}
 }

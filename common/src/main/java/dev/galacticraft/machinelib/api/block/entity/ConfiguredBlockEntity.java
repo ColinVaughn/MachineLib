@@ -33,6 +33,7 @@ import dev.galacticraft.machinelib.api.util.BlockFace;
 import dev.galacticraft.machinelib.impl.Constant;
 import dev.galacticraft.machinelib.impl.network.s2c.BaseMachineUpdatePayload;
 import dev.galacticraft.machinelib.impl.network.s2c.MachineStatusUpdatePayload;
+import dev.galacticraft.machinelib.impl.network.s2c.PoweredUpdatePayload;
 import dev.galacticraft.machinelib.impl.network.s2c.SideConfigurationUpdatePayload;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -335,9 +336,8 @@ public abstract class ConfiguredBlockEntity extends BaseBlockEntity {
                 MachineStatus oldStatus = this.status;
                 this.status = status;
                 ConfiguredBlockEntity.this.setChanged();
-                if (ConfiguredBlockEntity.this.level != null && !ConfiguredBlockEntity.this.level.isClientSide) {
+                if (ConfiguredBlockEntity.this.level != null && !ConfiguredBlockEntity.this.level.isClientSide)
                     ConfiguredBlockEntity.this.broadcastToPlayers(new MachineStatusUpdatePayload(ConfiguredBlockEntity.this.worldPosition, status, oldStatus));
-                }
             }
         }
 
@@ -346,6 +346,8 @@ public abstract class ConfiguredBlockEntity extends BaseBlockEntity {
             if (this.powered != powered) {
                 this.powered = powered;
                 ConfiguredBlockEntity.this.setChanged();
+                if (ConfiguredBlockEntity.this.level != null && !ConfiguredBlockEntity.this.level.isClientSide)
+                    ConfiguredBlockEntity.this.broadcastToPlayers(new PoweredUpdatePayload(ConfiguredBlockEntity.this.worldPosition, this.powered));
             }
         }
     }
