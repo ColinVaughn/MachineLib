@@ -26,10 +26,7 @@ import dev.architectury.networking.NetworkManager;
 import dev.galacticraft.machinelib.api.block.entity.MachineBlockEntity;
 import dev.galacticraft.machinelib.api.menu.MachineMenu;
 import dev.galacticraft.machinelib.client.api.event.MachineStatusEvents;
-import dev.galacticraft.machinelib.impl.network.s2c.BaseMachineUpdatePayload;
-import dev.galacticraft.machinelib.impl.network.s2c.MachineStatusUpdatePayload;
-import dev.galacticraft.machinelib.impl.network.s2c.MenuSyncPayload;
-import dev.galacticraft.machinelib.impl.network.s2c.SideConfigurationUpdatePayload;
+import dev.galacticraft.machinelib.impl.network.s2c.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -44,6 +41,11 @@ public final class MachineLibClientPackets {
     }
 
     public static void registerClient() {
+        NetworkManager.registerReceiver(NetworkManager.Side.S2C, PoweredUpdatePayload.TYPE, PoweredUpdatePayload.CODEC, (payload, context) -> context.queue(() -> {
+            ClientLevel level = Minecraft.getInstance().level;
+            if (level != null && level.getBlockEntity(payload.pos()) instanceof MachineBlockEntity machine)
+                machine.getState().setPowered(payload.powered());
+        }));
         NetworkManager.registerReceiver(NetworkManager.Side.S2C, BaseMachineUpdatePayload.TYPE, BaseMachineUpdatePayload.CODEC, (payload, context) -> context.queue(() -> {
             ClientLevel level = Minecraft.getInstance().level;
             if (level != null && level.getBlockEntity(payload.pos()) instanceof MachineBlockEntity machine) {
@@ -53,8 +55,12 @@ public final class MachineLibClientPackets {
                 machine.requestRerender();
             }
         }));
-        NetworkManager.registerReceiver(NetworkManager.Side.S2C, MachineStatusUpdatePayload.TYPE, MachineStatusUpdatePayload.CODEC, (payload, context) -> context.queue(() ->
-                MachineStatusEvents.MACHINE_STATUS_CHANGED.invoker().onMachineStatusChanged(Minecraft.getInstance(), Minecraft.getInstance().player, payload.pos(), payload.status(), payload.oldStatus())));
+        NetworkManager.registerReceiver(NetworkManager.Side.S2C, MachineStatusUpdatePayload.TYPE, MachineStatusUpdatePayload.CODEC, (payload, context) -> context.queue(() -> {
+            MachineStatusEvents.MACHINE_STATUS_CHANGED.invoker().onMachineStatusChanged(Minecraft.getInstance(), Minecraft.getInstance().player, payload.pos(), payload.status(), payload.oldStatus());
+            ClientLevel level = Minecraft.getInstance().level;
+            if (level != null && level.getBlockEntity(payload.pos()) instanceof MachineBlockEntity machine)
+                machine.getState().setStatus(payload.status());
+        }));
         NetworkManager.registerReceiver(NetworkManager.Side.S2C, SideConfigurationUpdatePayload.TYPE, SideConfigurationUpdatePayload.CODEC, (payload, context) -> context.queue(() -> {
             ClientLevel level = Minecraft.getInstance().level;
             if (level != null && level.getBlockEntity(payload.pos()) instanceof MachineBlockEntity machine) {
