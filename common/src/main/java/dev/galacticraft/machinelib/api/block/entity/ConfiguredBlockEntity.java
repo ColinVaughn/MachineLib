@@ -37,10 +37,8 @@ import dev.galacticraft.machinelib.impl.network.s2c.PoweredUpdatePayload;
 import dev.galacticraft.machinelib.impl.network.s2c.SideConfigurationUpdatePayload;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.ByteArrayTag;
-import net.minecraft.nbt.ByteTag;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.*;
+import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.profiling.ProfilerFiller;
@@ -293,6 +291,17 @@ public abstract class ConfiguredBlockEntity extends BaseBlockEntity {
             this.state.readTag((ByteTag) tag.get(Constant.Nbt.STATE));
         if (tag.contains(Constant.Nbt.ACTIVE))
             this.active = tag.getBoolean(Constant.Nbt.ACTIVE);
+        if (tag.contains("MachineStatusType", Tag.TAG_BYTE)) {
+            int type = tag.getByte("MachineStatusType");
+            if (type == -1) {
+                this.state.setStatus(null);
+            } else if (type >= 0 && type < MachineStatus.Type.values().length && tag.contains("MachineStatusText")) {
+                this.state.setStatus(MachineStatus.create(
+                        ComponentSerialization.CODEC.parse(NbtOps.INSTANCE, tag.get("MachineStatusText")).getOrThrow(),
+                        MachineStatus.Type.values()[type]
+                ));
+            }
+        }
 
         if (this.level != null && this.level.isClientSide()) {
             this.level.sendBlockUpdated(this.worldPosition, Blocks.AIR.defaultBlockState(), this.getBlockState(), Block.UPDATE_IMMEDIATE);
@@ -316,6 +325,11 @@ public abstract class ConfiguredBlockEntity extends BaseBlockEntity {
     public void populateUpdateTag(CompoundTag tag) {
         tag.put(Constant.Nbt.CONFIGURATION, this.configuration.createTag());
         tag.putBoolean(Constant.Nbt.ACTIVE, this.active);
+        MachineStatus status = this.state.getStatus();
+        tag.putByte("MachineStatusType", (byte) (status == null ? -1 : status.getType().ordinal()));
+        if (status != null) {
+            tag.put("MachineStatusText", ComponentSerialization.CODEC.encodeStart(NbtOps.INSTANCE, status.getText()).getOrThrow());
+        }
     }
 
     private IOFace @NotNull [] generateIOFaces() {
